@@ -1,49 +1,44 @@
 <template>
 <div class="request">
- <h1>New Request</h1>
   <div class="heading">
-    <div class="circle">1</div>
-    <h2>Add an Item</h2>
+    <h2>Raise a request</h2>
    </div>
    <div class="add">
      <div class="form">
-       <input v-model="title" placeholder="Title">
+       <input v-model="location" placeholder="Location">
        <p></p>
        <input v-model="description" placeholder="Description">
        <p></p>
+       <form>
+         <label for="assign">Assign to: </label>
+         <select name="assign" id="assign">
+           <option value="Luke">Luke</option>
+           <option value="Helaman">Helaman</option>
+           <option value="Kenneth">Kenneth</option>
+           <option value="Gordon">Gordon</option>
+           <option value="William">William</option>
+           <option value="Yiu">Yiu</option>
+         </select>
+       </form>
+       <form>
+         <label for="status">Status: </label>
+         <select name="status" id="status">
+           <option value="Not Started">Not Started</option>
+           <option value="In Progress">In Progress</option>
+           <option value="Completed">Completed</option>
+         </select>
+       </form>
        <input type="file" name="photo" @change="fileChanged">
        <button @click="upload">Upload</button>
      </div>
      <div class="upload" v-if="addItem">
-       <h2>{{addItem.title}}</h2>
-       <p>{{addItem.description}}</p>
+       <p><b>Location: </b>{{addItem.location}}</p>
+       <p><b>Description: </b>{{addItem.description}}</p>
+       <p><b>Assigned to: </b>{{addItem.assign}}</p>
+       <p><b>Status: </b>{{addItem.status}}</p>
        <img :src="addItem.path" />
      </div>
    </div>
-    <div class="heading">
-      <div class="circle">2</div>
-      <h2>Edit/Delete an Item</h2>
-    </div>
-    <div class="edit">
-      <div class="form">
-        <input v-model="findTitle" placeholder="Search">
-        <div class="suggestions" v-if="suggestions.length > 0">
-          <div class="suggestion" v-for="s in suggestions" :key="s.id" @click="selectItem(s)">{{s.title}}
-          </div>
-        </div>
-      </div>
-      <div class="upload" v-if="findItem">
-        <input v-model="findItem.title">
-        <p></p>
-        <input v-model="findItem.description">
-        <p></p>
-        <img :src="findItem.path" />
-      </div>
-      <div class="actions" v-if="findItem">
-        <button @click="deleteItem(findItem)">Delete</button>
-        <button @click="editItem(findItem)">Edit</button>
-      </div>
-    </div>
 </div>
 </template>
 
@@ -51,7 +46,6 @@
 
 h1 {
   font-size: 20px;
-  margin-top: 100px;
 }
 
 .image h2 {
@@ -129,14 +123,18 @@ export default {
   name: 'Request',
   data() {
     return {
-      title: "",
+      location: "",
       description: "",
+      assign: "",
+      status: "Incomplete",
       file: null,
       addItem: null,
       requests: [],
-      findTitle: "",
+      findLocation: "",
       findItem: null,
       findDescription: "",
+      findAssign: "",
+      findStatus: "",
     }
   },
   created() {
@@ -144,15 +142,16 @@ export default {
   },
   computed: {
     suggestions() {
-      let requests = this.requests.filter(request => request.title.toLowerCase().startsWith(this.findTitle.toLowerCase()));
-      return requests.sort((a, b) => a.title > b.title);
+      let requests = this.requests.filter(request => request.location.toLowerCase().startsWith(this.findLocation.toLowerCase()));
+      return requests.sort((a, b) => a.location > b.location);
     }
   },
   methods: {
     selectItem(request) {
-      this.findTitle = "";
+      this.findLocation = "";
       this.findItem = request;
       this.findDescription = "";
+      this.findStatus = "";
     },
     async deleteItem(request) {
       try {
@@ -167,8 +166,10 @@ export default {
     async editItem(request) {
       try {
         await axios.put("/api/requests/" + request._id, {
-          title: this.findItem.title,
+          location: this.findItem.location,
           description: this.findItem.description,
+          assign: this.findItem.assign,
+          status: this.findItem.status,
         });
         this.findItem = null;
         this.getItems();
@@ -194,9 +195,15 @@ export default {
         const formData = new FormData();
         formData.append('photo', this.file, this.file.name)
         let r1 = await axios.post('/api/photos', formData);
+        let selectElement = document.querySelector('#status');
+        let output = selectElement.value;
+        let selectElement2 = document.querySelector('#assign');
+        let output2 = selectElement2.value;
         let r2 = await axios.post('/api/requests', {
-          title: this.title,
+          location: this.location,
           description: this.description,
+          assign: output2,
+          status: output,
           path: r1.data.path
         });
         this.addItem = r2.data;

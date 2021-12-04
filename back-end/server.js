@@ -23,8 +23,10 @@ const upload = multer({
 });
 
 const requestSchema = new mongoose.Schema({
-  title: String,
+  location: String,
   description: String,
+  assign: String,
+  status: String,
   path: String,
 });
 
@@ -51,13 +53,15 @@ app.post('/api/photos', upload.single('photo'), async (req, res) => {
 
 app.post('/api/requests', async (req, res) => {
   const request = new Request({
-    title: req.body.title,
+    location: req.body.location,
     description: req.body.description,
+    assign: req.body.assign,
+    status: req.body.status,
     path: req.body.path,
   });
   try {
     await request.save();
-    res.send(item);
+    res.send(request);
   } catch (error) {
     console.log(error);
     res.sendStatus(500);
@@ -78,9 +82,13 @@ app.delete('/api/requests/:id', async (req, res) => {
 
 app.put('/api/requests/:id', async (req, res) => {
   try {
-    let request = await Request.findOne();
-    request.title = req.body.title;
+    let request = await Request.findOne({
+      _id: req.params.id
+    });
+    request.location = req.body.location;
     request.description = req.body.description;
+    request.assign = req.body.assign;
+    request.status = req.body.status;
     await request.save();
     res.send(request);
   } catch (error) {
